@@ -28,3 +28,7 @@ Edit ```example.py``` to add your twitter handle, then run it:
 You'll see a markov-generated tweet each time you run the script.
 
 you can also tweak the ngram–```example.py``` uses 1 for more randomness, 2 (the default) works as well.
+
+## todo
+- still some issues with apostrophes in the middle of words
+- no conjunctions at the end of a tweet
