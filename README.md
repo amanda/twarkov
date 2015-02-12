@@ -32,3 +32,4 @@ you can also tweak the ngram–```example.py``` uses 1 for more randomness, 2 (t
 ## todo
 - still some issues with apostrophes in the middle of words
 - no conjunctions at the end of a tweet
+- TESTS
