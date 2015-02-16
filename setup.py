@@ -6,7 +6,7 @@ here = path.abspath(path.dirname(__file__))
 
 setup(
   name = 'twarkov',
-  version = '0.0.1',
+  version = '0.0.2',
   description = 'Markov generator built for generating Tweets from timelines',
   license = 'MIT',
   author = 'Amanda Pickering',
