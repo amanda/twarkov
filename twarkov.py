@@ -69,6 +69,8 @@ def fix_therest(text):
     quote_hack = re.sub(r"“”“", r'', nna_hack)
     if quote_hack[0:2] == "'s":
         clean = quote_hack[3:]
+    else:
+        clean = quote_hack
     return clean
 
 
@@ -97,14 +99,15 @@ class MarkovGenerator(object):
         self.text = text
         self.ngram = ngram
         self.tokenize_fun = tokenize_fun
-        self.markov_dict = self.make_markov_dict()
         self.use_end_tokens = type(text) is list and use_end_tokens
+        self.markov_dict = self.make_markov_dict()
 
     def make_markov_dict(self):
         '''returns a dict of {ngram tuple: Counter} 
         counting the number of times words follow an ngram'''
         text = self.text if type(self.text) is list else [self.text]
         ngram = self.ngram
+        markov_dict = defaultdict(Counter)
 
         for sentence in text:
             words = self.tokenize_fun(sentence)
@@ -127,10 +130,13 @@ class MarkovGenerator(object):
             for el in it:
                 total = func(total, el)
                 yield total
-        choices, weights = zip(*self.markov_dict[start_key].iteritems())
-        cumulative_distribution = list(accumulate(weights))
-        rando = random.random() * cumulative_distribution[-1]
-        return choices[bisect.bisect(cumulative_distribution, rando)]
+        if len(self.markov_dict[start_key].keys()):  # Check that values follow the start_key
+            choices, weights = zip(*self.markov_dict[start_key].iteritems())
+            cumulative_distribution = list(accumulate(weights))
+            rando = random.random() * cumulative_distribution[-1]
+            return choices[bisect.bisect(cumulative_distribution, rando)]
+        else:
+            return EndToken()
 
     def ngrams_to_words(self, tuple_list):
         '''(list of ngram tuples) -> string
