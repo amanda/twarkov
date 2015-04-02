@@ -75,32 +75,46 @@ def fix_therest(text):
 def final_cleanup(text):
     '''run on generated text to do all cleanup'''
     clean = fix_apostrophes(fix_nt(fix_tco(fix_hashtags(fix_therest(text)))))
-    if clean[-2] == (' ' or '.'):
+    if len(clean) >= 2 and clean[-2] == (' ' or '.'):
         clean = clean[:-2] + '.'
     return clean
 
+
+# end marker
+
+class EndToken(object):
+    ''' Special dummy class denoting the end of a sentence. '''
+
+    def __init__(self):
+        # no-op
+        return
 
 class MarkovGenerator(object):
 
     '''markov text generator for making bots from people's twitter timelines'''
 
-    def __init__(self, text, ngram=2, tokenize_fun=default_tokenize):
+    def __init__(self, text, ngram=2, tokenize_fun=default_tokenize, use_end_tokens=False):
         self.text = text
         self.ngram = ngram
         self.tokenize_fun = tokenize_fun
         self.markov_dict = self.make_markov_dict()
+        self.use_end_tokens = type(text) is list and use_end_tokens
 
     def make_markov_dict(self):
         '''returns a dict of {ngram tuple: Counter} 
         counting the number of times words follow an ngram'''
-        text = self.text
+        text = self.text if type(self.text) is list else [self.text]
         ngram = self.ngram
-        words = self.tokenize_fun(text)
-        zippy_words = zip(*[words[i:] for i in xrange(ngram + 1)])
-        markov_dict = defaultdict(Counter)
-        for t in zippy_words:
-            a, b = t[:-1], t[-1]
-            markov_dict[a][b] += 1
+
+        for sentence in text:
+            words = self.tokenize_fun(sentence)
+            zippy_words = zip(*[words[i:] for i in xrange(ngram + 1)])
+            for t in zippy_words:
+                a, b = t[:-1], t[-1]
+                markov_dict[a][b] += 1
+            if self.use_end_tokens:
+                markov_dict[t[1:]][EndToken()] += 1
+
         return markov_dict
 
     def choose_word(self, start_key):
@@ -137,6 +151,8 @@ class MarkovGenerator(object):
         words_tuples = [start_tup]
         while words_length < 90:
             next_word = self.choose_word(words_tuples[-1])
+            if type(next_word) == EndToken:
+                break
             next_tup = words_tuples[-1][1:] + (next_word,)
             words_length += len(next_word) + 1
             words_tuples.append(next_tup)
